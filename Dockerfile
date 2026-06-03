@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ceph-common \
     && rm -rf /var/lib/apt/lists/*
 
-RUN groupadd omap && useradd --gid omap --no-create-home omap
+RUN groupadd --gid 65532 omap && useradd --uid 65532 --gid 65532 --no-create-home omap
 
 COPY --from=builder /bin/omapctl /usr/local/bin/omapctl
 
