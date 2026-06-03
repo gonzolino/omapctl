@@ -20,7 +20,7 @@ RUN CGO_ENABLED=1 go build -o /bin/omapctl .
 FROM ubuntu:26.04
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    librados2 \
+    ceph-common \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /bin/omapctl /usr/local/bin/omapctl
