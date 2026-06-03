@@ -1,0 +1,21 @@
+name: Lint
+
+on:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Install Ceph libs
+        run: sudo apt-get update && sudo apt-get install -y libcephfs-dev librbd-dev librados-dev
+
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.12
