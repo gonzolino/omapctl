@@ -50,6 +50,19 @@ func formatValue(b []byte) string {
 	return "0x" + hex.EncodeToString(b)
 }
 
+// errWriter wraps an io.Writer and stops writing after the first error.
+type errWriter struct {
+	w   io.Writer
+	err error
+}
+
+func (ew *errWriter) writef(format string, args ...any) {
+	if ew.err != nil {
+		return
+	}
+	_, ew.err = fmt.Fprintf(ew.w, format, args...)
+}
+
 func PrintEntries(w io.Writer, entries []Entry, f Format) error {
 	sorted := make([]Entry, len(entries))
 	copy(sorted, entries)
@@ -70,9 +83,13 @@ func PrintEntries(w io.Writer, entries []Entry, f Format) error {
 		return enc.Encode(out)
 	default:
 		tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(tw, "KEY\tVALUE")
+		ew := &errWriter{w: tw}
+		ew.writef("KEY\tVALUE\n")
 		for _, e := range sorted {
-			fmt.Fprintf(tw, "%s\t%s\n", e.Key, formatValue(e.Value))
+			ew.writef("%s\t%s\n", e.Key, formatValue(e.Value))
+		}
+		if ew.err != nil {
+			return ew.err
 		}
 		return tw.Flush()
 	}
@@ -90,8 +107,12 @@ func PrintEntry(w io.Writer, entry Entry, f Format) error {
 		return enc.Encode(jsonEntry{Key: entry.Key, Value: formatValue(entry.Value)})
 	default:
 		tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(tw, "KEY\tVALUE")
-		fmt.Fprintf(tw, "%s\t%s\n", entry.Key, formatValue(entry.Value))
+		ew := &errWriter{w: tw}
+		ew.writef("KEY\tVALUE\n")
+		ew.writef("%s\t%s\n", entry.Key, formatValue(entry.Value))
+		if ew.err != nil {
+			return ew.err
+		}
 		return tw.Flush()
 	}
 }
